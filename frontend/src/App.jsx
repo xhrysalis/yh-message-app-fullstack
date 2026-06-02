@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { BASE_URL } from "./api"
+import { BASE_URL } from "./api" 
 import { PostMessage } from "./components/PostMessage"
 import { MessageList } from "./components/MessageList"
 import { AuthModal } from "./components/AuthModal"
@@ -7,9 +7,9 @@ import { AuthModal } from "./components/AuthModal"
 export const App = () => {
   const [loading, setLoading] = useState(false)
   const [messageList, setMessageList] = useState([])
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(null) 
   const [modal, setModal] = useState(null)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState(null) 
 
   const fetchPosts = () => {
     setLoading(true)

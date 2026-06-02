@@ -14,7 +14,9 @@ const userSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
   },
+  // Technically, we could also put in the password length requirement here. Which I'm going to do, actually.
   password: {
+    minlength: 10,
     type: String,
     required: true,
   },

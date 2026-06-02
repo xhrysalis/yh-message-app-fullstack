@@ -25,6 +25,7 @@ app.get("/", (req, res) => {
   res.send(listEndpoints(app))
 })
 
+//Password minimum length requirement is established in User.js, but there should probably be something to tell the user what the minimum length should be here. 
 app.post("/register", async (req, res) => {
   try {
     const { email, password, username } = req.body
@@ -41,10 +42,12 @@ app.post("/register", async (req, res) => {
       const field = existingUser.email === email.toLowerCase() ? "email" : "username"
       return res.status(400).json({
         success: false,
+        // This should not return the actual email/username to avoid information disclosure. Could still specify which field, but ...
         message: `A user with this ${field} already exists`
       })
     }
 
+    // The password was already being hashed as per our defined security requirements.
     const hashedPassword = await bcrypt.hash(password, 10)
     const user = new User({ username: username.trim(), email, password: hashedPassword })
     await user.save()
@@ -81,9 +84,10 @@ app.post("/login", async (req, res) => {
     })
 
     if (!user) {
+      // To not give away whether the username/email exists, we return the same message for both cases (preventing information disclosure)
       return res.status(401).json({
         success: false,
-        message: "No account found with that username or email",
+        message: "Invalid username/email or password",
         response: null,
       })
     }
@@ -92,7 +96,7 @@ app.post("/login", async (req, res) => {
     if (!passwordMatch) {
       return res.status(401).json({
         success: false,
-        message: "Password is incorrect",
+        message: "Invalid username/email or password",
         response: null,
       })
     }
