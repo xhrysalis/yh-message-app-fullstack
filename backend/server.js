@@ -33,6 +33,12 @@ app.post("/register", async (req, res) => {
     if (!username || username.trim().length < 2) {
       return res.status(400).json({ success: false, message: "Username must be at least 2 characters" })
     }
+np
+    //APPARENTLY Chrome validates this for you so. Like whatever. Maybe we can keep it as a safety net if it isn't handled by the browser?
+   /* const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/
+    if (!email || !emailRegex.test(email)) {
+      return res.status(400).json({ success: false, message: "Please provide a valid email address" })
+    } */
 
     const existingUser = await User.findOne({
       $or: [{ email: email.toLowerCase() }, { username: username.trim() }]
@@ -84,6 +90,7 @@ app.post("/login", async (req, res) => {
     })
 
     if (!user) {
+      //Actually changed code here.
       // To not give away whether the username/email exists, we return the same message for both cases (preventing information disclosure)
       return res.status(401).json({
         success: false,

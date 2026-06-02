@@ -14,11 +14,17 @@ const userSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
   },
-  // Technically, we could also put in the password length requirement here. Which I'm going to do, actually.
+  //Things actually changed.
+  //Technically, we could also put in the password length requirement here. Which I'm going to do, actually.
   password: {
-    minlength: 10,
+    minlength: 8,
     type: String,
     required: true,
+    //Added validation for password complexity.
+    validate: {
+    validator: value => /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).+$/.test(value),
+    message: "Password must contain at least one uppercase letter, one lowercase letter, and one number."
+  }
   },
 })
 

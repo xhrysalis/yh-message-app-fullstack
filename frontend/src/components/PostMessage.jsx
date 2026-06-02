@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { BASE_URL } from "../api"
 
+//So we're not using SQL, but we should still be validating the content of messages to prevent, for example, attackers from sending JSON objects instead of strings, which could potentially cause harm. However, we don't possess enough know-how to implement this so lets just comment it :D
 export const PostMessage = ({ newMessage, fetchPosts, user, onUnauthorized }) => {
   const [newPost, setNewPost] = useState("")
   const [errorMessage, setErrorMessage] = useState("")

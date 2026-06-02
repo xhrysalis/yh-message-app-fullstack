@@ -24,7 +24,7 @@ export const SingleMessage = ({ message, user, onUnauthorized, fetchPosts }) => 
 
       await fetchPosts()
     } catch (error) {
-      console.error(error)
+      console.error(error) 
     }
   }
 

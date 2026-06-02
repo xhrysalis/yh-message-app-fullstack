@@ -61,7 +61,7 @@ export const AuthModal = ({ mode, onClose, onSuccess }) => {
             <input
               type="email"
               placeholder="Email"
-              value={email}
+              value={email} 
               onChange={(e) => setEmail(e.target.value)}
               name="email"
               autoComplete="email"
