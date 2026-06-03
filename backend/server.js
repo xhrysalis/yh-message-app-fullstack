@@ -22,6 +22,7 @@ app.use(cors({
 }))
 app.use(express.json())
 
+//Aaaand a limit for logging in!
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // limit each IP to 5 login attempts per windowMs
@@ -30,6 +31,16 @@ const loginLimiter = rateLimit({
   message: { success: false, message: "Too many login attempts, please try again later." },
 }) //copilot offer
 
+//Added rate limiting for registration.
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // limit each IP to 5 registration attempts per hour
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Too many registration attempts, please try again later." },
+})
+
+//Rate limiting for posting messages, as to prevent spam. Very basic.
 const postMessageLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 10, // limit each IP to 10 message posts per windowMs
@@ -42,8 +53,9 @@ app.get("/", (req, res) => {
   res.send(listEndpoints(app))
 })
 
+//Calling registerLimiter here, so it actually does something!
 //Password minimum length requirement is established in User.js, but there should probably be something to tell the user what the minimum length should be here. 
-app.post("/register", async (req, res) => {
+app.post("/register", registerLimiter, async (req, res) => {
   try {
     const { email, password, username } = req.body
 
@@ -58,15 +70,6 @@ app.post("/register", async (req, res) => {
       return res.status(400).json({ success: false, message: "Please provide a valid email address" })
     }
 
-    //Not strictly necessary ... but let's keep it for now.
-    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/
-    if (!password || !passwordRegex.test(password)) {
-      return res.status(400).json({
-        success: false,
-        message: "Password must be at least 8 characters and include one uppercase letter, one lowercase letter, and one number."
-      })
-    }
-
     const existingUser = await User.findOne({
       $or: [{ email: email.toLowerCase() }, { username: username.trim() }]
     })
@@ -79,9 +82,9 @@ app.post("/register", async (req, res) => {
         message: `A user with this ${field} already exists`
       })
     }
-
-    // Keep password validation on the raw input. The model will hash it before save.
-    const user = new User({ username: username.trim(), email, password })
+// Password was already being hashed according to our security requirements!
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const user = new User({ username: username.trim(), email, password: hashedPassword })
     await user.save()
 
     const accessToken = jwt.sign(
@@ -108,7 +111,7 @@ app.post("/register", async (req, res) => {
   }
 })
 
-app.post("/login", loginLimiter, async (req, res) => { //// Add express-rate-limit/LoginLimiter for rate limiting - copilot
+app.post("/login", loginLimiter, async (req, res) => { // Add express-rate-limit/LoginLimiter for rate limiting - copilot
   try {
     const { login, password } = req.body
     const user = await User.findOne({
