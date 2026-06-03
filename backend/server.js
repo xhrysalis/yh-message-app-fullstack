@@ -34,11 +34,13 @@ app.post("/register", async (req, res) => {
       return res.status(400).json({ success: false, message: "Username must be at least 2 characters" })
     }
 np
-    //APPARENTLY Chrome validates this for you so. Like whatever. Maybe we can keep it as a safety net if it isn't handled by the browser?
-   /* const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/
+    // Added a very basic email format validation, which isn't foolproof, but should catch common mistakes/completely invalid emails.
+    // Some browsers have built in email validation, but this ensures that the backend also enforces it, since we can't count on every browser having it.
+   const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/
     if (!email || !emailRegex.test(email)) {
       return res.status(400).json({ success: false, message: "Please provide a valid email address" })
-    } */
+      console.log("Invalid email format:", email)
+    }
 
     const existingUser = await User.findOne({
       $or: [{ email: email.toLowerCase() }, { username: username.trim() }]
@@ -53,7 +55,7 @@ np
       })
     }
 
-    // The password was already being hashed as per our defined security requirements.
+    // The password was already being hashed as per our defined security requirements. Additionally it is salted for 10 rounds, which is great.
     const hashedPassword = await bcrypt.hash(password, 10)
     const user = new User({ username: username.trim(), email, password: hashedPassword })
     await user.save()
@@ -90,8 +92,7 @@ app.post("/login", async (req, res) => {
     })
 
     if (!user) {
-      //Actually changed code here.
-      // To not give away whether the username/email exists, we return the same message for both cases (preventing information disclosure)
+      // To not give away whether the username/email exists, we return the same message for both cases, so that malicious actors can't use this endpoint to enumerate valid usernames/emails.
       return res.status(401).json({
         success: false,
         message: "Invalid username/email or password",
