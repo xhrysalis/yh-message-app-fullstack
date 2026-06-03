@@ -20,20 +20,12 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+    minlength: 8,
+    validate: {
+      validator: value => passwordRegex.test(value),
+      message: "Password must be at least 8 characters and contain one uppercase letter, one lowercase letter, and one number."
+    }
   },
-})
-
-userSchema.pre("validate", function (next) {
-  if (!this.isModified("password")) return next()
-
-  if (!passwordRegex.test(this.password)) {
-    this.invalidate(
-      "password",
-      "Password must be at least 8 characters and contain one uppercase letter, one lowercase letter, and one number."
-    )
-  }
-
-  next()
 })
 
 userSchema.pre("save", async function (next) {

@@ -58,6 +58,7 @@ app.post("/register", async (req, res) => {
       return res.status(400).json({ success: false, message: "Please provide a valid email address" })
     }
 
+    //Not strictly necessary ... but let's keep it for now.
     const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/
     if (!password || !passwordRegex.test(password)) {
       return res.status(400).json({
