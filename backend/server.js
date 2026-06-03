@@ -5,6 +5,7 @@ import express from "express"
 import mongoose from "mongoose"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
+import rateLimit from "express-rate-limit"
 import { Message } from "./models/Message.js"
 import { User } from "./models/User.js"
 import { authenticateUser } from "./middleware/auth.js"
@@ -21,6 +22,22 @@ app.use(cors({
 }))
 app.use(express.json())
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 login attempts per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Too many login attempts, please try again later." },
+}) //copilot offer
+
+const postMessageLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // limit each IP to 10 message posts per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Too many messages, please wait a moment before posting again." },
+}) //copilot offer
+
 app.get("/", (req, res) => {
   res.send(listEndpoints(app))
 })
@@ -33,13 +50,20 @@ app.post("/register", async (req, res) => {
     if (!username || username.trim().length < 2) {
       return res.status(400).json({ success: false, message: "Username must be at least 2 characters" })
     }
-np
+
     // Added a very basic email format validation, which isn't foolproof, but should catch common mistakes/completely invalid emails.
     // Some browsers have built in email validation, but this ensures that the backend also enforces it, since we can't count on every browser having it.
    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/
     if (!email || !emailRegex.test(email)) {
       return res.status(400).json({ success: false, message: "Please provide a valid email address" })
-      console.log("Invalid email format:", email)
+    }
+
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/
+    if (!password || !passwordRegex.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters and include one uppercase letter, one lowercase letter, and one number."
+      })
     }
 
     const existingUser = await User.findOne({
@@ -84,7 +108,7 @@ np
   }
 })
 
-app.post("/login", async (req, res) => {
+app.post("/login", loginLimiter, async (req, res) => { //// Add express-rate-limit/LoginLimiter for rate limiting - copilot
   try {
     const { login, password } = req.body
     const user = await User.findOne({
@@ -148,7 +172,7 @@ app.get("/messages", async (req, res) => {
   }
 })
 
-app.post("/messages", authenticateUser, async (req, res) => {
+app.post("/messages", authenticateUser, postMessageLimiter, async (req, res) => {
   const message = new Message({ message: req.body.message, user: req.user._id })
   try {
     const saved = await message.save()
