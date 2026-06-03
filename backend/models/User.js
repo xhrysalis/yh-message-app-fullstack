@@ -1,8 +1,6 @@
 import mongoose from "mongoose"
 import bcrypt from "bcrypt"
 
-const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/
-
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
@@ -22,21 +20,10 @@ const userSchema = new mongoose.Schema({
     required: true,
     minlength: 8,
     validate: {
-      validator: value => passwordRegex.test(value),
+      // Basic regex for password complexity.
+      validator: value => /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/.test(value),
       message: "Password must be at least 8 characters and contain one uppercase letter, one lowercase letter, and one number."
     }
   },
 })
-
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next()
-
-  try {
-    this.password = await bcrypt.hash(this.password, 10)
-    next()
-  } catch (error) {
-    next(error)
-  }
-})
-
 export const User = mongoose.model("User", userSchema)
