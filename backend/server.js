@@ -79,9 +79,8 @@ app.post("/register", async (req, res) => {
       })
     }
 
-    // The password was already being hashed as per our defined security requirements. Additionally it is salted for 10 rounds, which is great.
-    const hashedPassword = await bcrypt.hash(password, 10)
-    const user = new User({ username: username.trim(), email, password: hashedPassword })
+    // Keep password validation on the raw input. The model will hash it before save.
+    const user = new User({ username: username.trim(), email, password })
     await user.save()
 
     const accessToken = jwt.sign(
