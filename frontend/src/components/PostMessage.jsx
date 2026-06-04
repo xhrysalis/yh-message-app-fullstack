@@ -4,6 +4,7 @@ import { BASE_URL } from "../api"
 //So we're not using SQL, but we should still be validating the content of messages to prevent, for example, attackers from sending JSON objects instead of strings, which could potentially cause harm. However, we don't possess enough know-how to implement this so lets just comment it :D
 export const PostMessage = ({ newMessage, fetchPosts, user, onUnauthorized }) => {
   const [newPost, setNewPost] = useState("")
+  //This is the first place that we validate that the message (input) is actually a string, so that users cannot post JSON objects or similar that could cause problems.
   //Here, we ought to validate that newpost is actually a string, and not an object or anything that might cause issues.
   //typeof newPost === "string" || console.warn("New post is not a string:", newPost) something like this?
   const [errorMessage, setErrorMessage] = useState("")
@@ -13,6 +14,9 @@ export const PostMessage = ({ newMessage, fetchPosts, user, onUnauthorized }) =>
     event.preventDefault()
     setSubmitting(true)
 
+    // TODO: validate the message before sending it.
+    // The backend should not trust raw user input, but the client can still catch
+    // obvious problems like an empty string or a non-string value before making the request.
     try {
       const res = await fetch(`${BASE_URL}/messages`, {
         method: "POST",

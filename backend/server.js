@@ -131,6 +131,7 @@ app.post("/login", loginLimiter, async (req, res) => { // Add express-rate-limit
     if (!passwordMatch) {
       return res.status(401).json({
         success: false,
+        //Ditto!
         message: "Invalid username/email or password",
         response: null,
       })
@@ -162,6 +163,8 @@ app.post("/login", loginLimiter, async (req, res) => { // Add express-rate-limit
 
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id)
 
+// Incoming message payloads should be checked here on the server.
+// Validate req.body.message before constructing the Message model and saving it.
 app.get("/messages", async (req, res) => {
   try {
     const messages = await Message.find()
@@ -176,6 +179,7 @@ app.get("/messages", async (req, res) => {
 })
 
 app.post("/messages", authenticateUser, postMessageLimiter, async (req, res) => {
+  //Another validation check required.
   const message = new Message({ message: req.body.message, user: req.user._id })
   try {
     const saved = await message.save()
@@ -187,6 +191,8 @@ app.post("/messages", authenticateUser, postMessageLimiter, async (req, res) => 
 
 app.patch("/messages/:id", authenticateUser, async (req, res) => {
   if (!isValidId(req.params.id)) return res.status(400).json({ error: "Invalid message ID" })
+  //Every message has to be validated, even edited/updated ones, since this could be used as a way to bypass the other validation we have in place.
+
   try {
     const message = await Message.findById(req.params.id)
     if (!message) return res.status(404).json({ error: "Message not found" })
