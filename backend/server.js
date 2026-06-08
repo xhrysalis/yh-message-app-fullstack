@@ -22,14 +22,14 @@ app.use(cors({
 }))
 app.use(express.json())
 
-//Aaaand a limit for logging in!
+//Rate limit for logging in!
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // limit each IP to 5 login attempts per windowMs
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: "Too many login attempts, please try again later." },
-}) //copilot offer
+})
 
 //Added rate limiting for registration.
 const registerLimiter = rateLimit({
@@ -47,27 +47,18 @@ const postMessageLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: "Too many messages, please wait a moment before posting again." },
-}) //copilot offer
-
+})
 app.get("/", (req, res) => {
   res.send(listEndpoints(app))
 })
 
 //Calling registerLimiter here, so it actually does something!
-//Password minimum length requirement is established in User.js, but there should probably be something to tell the user what the minimum length should be here. 
 app.post("/register", registerLimiter, async (req, res) => {
   try {
     const { email, password, username } = req.body
 
     if (!username || username.trim().length < 2) {
       return res.status(400).json({ success: false, message: "Username must be at least 2 characters" })
-    }
-
-    // Added a very basic email format validation, which isn't foolproof, but should catch common mistakes/completely invalid emails.
-    // Some browsers have built in email validation, but this ensures that the backend also enforces it, since we can't count on every browser having it.
-   const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/
-    if (!email || !emailRegex.test(email)) {
-      return res.status(400).json({ success: false, message: "Please provide a valid email address" })
     }
 
     const existingUser = await User.findOne({
